@@ -1,7 +1,35 @@
-// Put your libraries here (#include ...)
-#include <WaspWIFI_PRO.h> 
-#include <WaspFrame.h>
+/*  
+ *  ------ [Ga_v30_11] LPG Sensor reading for v30  -------- 
+ *  
+ *  Explanation: Turn on the Gases Board v30 and read the LPG
+ *  sensor every five seconds, printing the result through the USB
+ *  
+ *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L. 
+ *  http://www.libelium.com 
+ *  
+ *  This program is free software: you can redistribute it and/or modify  
+ *  it under the terms of the GNU General Public License as published by  
+ *  the Free Software Foundation, either version 3 of the License, or  
+ *  (at your option) any later version.  
+ *   
+ *  This program is distributed in the hope that it will be useful,  
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of  
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the  
+ *  GNU General Public License for more details.  
+ *   
+ *  You should have received a copy of the GNU General Public License  
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>. 
+ *  
+ *  Version:           3.0
+ *  Design:            David Gascón 
+ *  Implementation:    Ahmad Saad
+ */
+
+// Library include
 #include <WaspSensorGas_v30.h>
+#include <WaspFrame.h>
+#include <WaspWIFI_PRO.h> 
+
 
 
 
@@ -20,64 +48,11 @@ uint8_t error;
 uint8_t status;
 unsigned long previous;
 
-
-
-/*void setup() 
-{
-  luat de aici
-}*/
-
-/*void loop()
-{ */
-// NO2 Sensor must be connected physically in SOCKET_3
-NO2SensorClass NO2Sensor(SOCKET_3);
-
-// CO Sensor must be connected physically in SOCKET_4
-COSensorClass COSensor(SOCKET_4);  
-
-
-// VOC Sensor must be connected in SOCKET_5
-VOCSensorClass VOCSensor(SOCKET_5);
-
-
-
 // LPG Sensor can be connected in SOCKET6 or SOCKET7
+VOCSensorClass VOCSensor(SOCKET_5);
 LPGSensorClass LPGSensor(SOCKET_7);
 
-// O2 Sensor must be connected in SOCKET_1
-O2SensorClass O2Sensor(SOCKET_1);
 
-// Concentrations used in calibration process
-#define POINT1_PPM_NO2 10.0   // <-- Normal concentration in air
-#define POINT2_PPM_NO2 50.0
-#define POINT3_PPM_NO2 100.0
-// Calibration voltages obtained during calibration process (in KOHMs)
-#define POINT1_RES_NO2 45.25  // <-- Rs at normal concentration in air
-#define POINT2_RES_NO2 25.50
-#define POINT3_RES_NO2 3.55
-
-// Concentratios used in calibration process
-#define POINT1_PPM_CO 100.0   // <--- Ro value at this concentration
-#define POINT2_PPM_CO 300.0   // 
-#define POINT3_PPM_CO 1000.0  // 
-// Calibration resistances obtained during calibration process
-#define POINT1_RES_CO 230.30 // <-- Ro Resistance at 100 ppm. Necessary value.
-#define POINT2_RES_CO 40.665 //
-#define POINT3_RES_CO 20.300 //
-
-// Concentratios used in calibration process
-#define POINT1_PPM_VOC 100.0   //  <--- Ro value at this concentration
-#define POINT2_PPM_VOC 300.0
-#define POINT3_PPM_VOC 1000.0
-// Calibration resistances obtained during calibration process
-#define POINT1_RES_VOC 230.30 // <-- Ro Resistance at 100 ppm. Necessary value.
-#define POINT2_RES_VOC 40.665 // 
-#define POINT3_RES_VOC 20.300 // 
-
-// Percentage values of Oxygen
-#define POINT1_PERCENTAGE 0.0    
-#define POINT2_PERCENTAGE 5.0  
-// Calibration Voltage Obtained during calibration process (in mV)
 #define POINT1_VOLTAGE 0.35
 #define POINT2_VOLTAGE 2.0
 
@@ -91,39 +66,34 @@ O2SensorClass O2Sensor(SOCKET_1);
 #define POINT2_RES_LPG 25.50
 #define POINT3_RES_LPG 3.55
 
-
-
+// Concentratios used in calibration process
+#define POINT1_PPM_VOC 100.0   //  <--- Ro value at this concentration
+#define POINT2_PPM_VOC 300.0
+#define POINT3_PPM_VOC 1000.0
+// Calibration resistances obtained during calibration process
+#define POINT1_RES_VOC 230.30 // <-- Ro Resistance at 100 ppm. Necessary value.
+#define POINT2_RES_VOC 40.665 // 
+#define POINT3_RES_VOC 20.300 // 
+  
 // Define the number of calibration points
 #define numPoints 3
-
+//S8
 float temperature; // Stores the temperature in ºC
 float humidity;     // Stores the realitve humidity in %RH
-float pressure;    // Stores the pressure in Pa
-
+float pressure;    
+//S5
 float VOCconcentrations[] = {POINT1_PPM_VOC, POINT2_PPM_VOC, POINT3_PPM_VOC};
 float VOCresValues[] =      {POINT1_RES_VOC, POINT2_RES_VOC, POINT3_RES_VOC};
-
-
-float NO2concentrations[] = {POINT1_PPM_NO2, POINT2_PPM_NO2, POINT3_PPM_NO2};
-float NO2voltages[] =       {POINT1_RES_NO2, POINT2_RES_NO2, POINT3_RES_NO2};
-
-float COconcentrations[] = {POINT1_PPM_CO, POINT2_PPM_CO, POINT3_PPM_CO};
-float COresValues[] =      {POINT1_RES_CO, POINT2_RES_CO, POINT3_RES_CO};
-
-float O2concentrations[] = {POINT1_PERCENTAGE, POINT2_PERCENTAGE};
-float O2voltages[] =       {POINT1_VOLTAGE, POINT2_VOLTAGE};
-
+//S7  
 float concentrations[] = {POINT1_PPM_LPG, POINT2_PPM_LPG, POINT3_PPM_LPG};
 float resValues[] =      {POINT1_RES_LPG, POINT2_RES_LPG, POINT3_RES_LPG};
 
-
-// define the Waspmote ID 
 char node_ID[] = "Gas_WiFi3";
 
- // 2. Read sensors
- //////////////////////////////////////////
- void setup()
+void setup() 
 {
+  // Configure the USB port
+
   USB.println(F("Start program"));  
   USB.println(F("***************************************"));  
   USB.println(F("Once the module is set with one or more"));
@@ -132,32 +102,21 @@ char node_ID[] = "Gas_WiFi3";
   USB.println(F("Refer to example 'WIFI_PRO_01' to configure"));  
   USB.println(F("the WiFi module with proper settings"));
   USB.println(F("***************************************"));
-  
-  
-  // set the Waspmote ID
-//frame.setID(moteID);  
-// Calculate the slope and the intersection of the logarithmic function
-NO2Sensor.setCalibrationPoints(NO2voltages, NO2concentrations, numPoints);
-// Calculate the slope and the intersection of the logarithmic function
-COSensor.setCalibrationPoints(COresValues, COconcentrations, numPoints);
-// Calculate the slope and the intersection of the logarithmic function
-VOCSensor.setCalibrationPoints(VOCresValues, VOCconcentrations, numPoints);
-// set o2
-O2Sensor.setCalibrationPoints(O2voltages, O2concentrations);  
- LPGSensor.setCalibrationPoints(resValues, concentrations, numPoints);
-  
+  // Calculate the slope and the intersection of the logarithmic function
+  VOCSensor.setCalibrationPoints(VOCresValues, VOCconcentrations, numPoints);
+  LPGSensor.setCalibrationPoints(resValues, concentrations, numPoints);
 
-//turn on gas and sensors
-  Gases.ON();
-  delay(100);   
-  NO2Sensor.ON();
-  COSensor.ON();
+  ///////////////////////////////////////////
+  // 1. Turn on the board and the SOCKET
+  /////////////////////////////////////////// 
+  
+  // Switch ON and configure the Gases Board
+  Gases.ON();  
+    delay(100); 
+  // Switch ON the sensor socket
   VOCSensor.ON();
-  O2Sensor.ON();
   LPGSensor.ON();
 }
-// define the Waspmote ID 
-//char moteID[] = "GAS_WiFi";
 void loop()
 {
 
@@ -178,14 +137,10 @@ void loop()
   {
     USB.println(F("WiFi did not initialize correctly"));
   }
-
-
-  //////////////////////////////////////////////////
-  // 2. Join AP
-  //////////////////////////////////////////////////  
-
-  // check connectivity
-  status =  WIFI_PRO.isConnected();
+  ///////////////////////////////////////////
+  // 2. Read sensors
+  /////////////////////////////////////////// 
+ status =  WIFI_PRO.isConnected();
 
   // check if module is connected
   if (status == true)
@@ -200,22 +155,12 @@ void loop()
   temperature = Gases.getTemperature();
   humidity = Gases.getHumidity();
   pressure = Gases.getPressure();
-  float NO2Vol = NO2Sensor.readVoltage();
-  float NO2Res = NO2Sensor.readResistance(NO2Vol);    // Resistance of the sensor
-  float NO2PPM = NO2Sensor.readConcentration(NO2Res); // PPM value of NO2
   float LPGVol = LPGSensor.readVoltage();         // Voltage value of the sensor
   float LPGRes = LPGSensor.readResistance();      // Resistance of the sensor
   float LPGPPM = LPGSensor.readConcentration();   // PPM value of LPG
-  float coVol =  COSensor.readVoltage();
-  float coRes = COSensor.readResistance(coVol);
-  float coPPM = COSensor.readConcentration(coRes); // PPM value of CO
   float vocVol = VOCSensor.readVoltage();
   float vocRes = VOCSensor.readResistance(vocVol);    // Resistance of the senso
   float vocPPM = VOCSensor.readConcentration(vocRes); // PPM value of VOC
-   // O2 Sensor does not need power suplly
-  float O2Vol = O2Sensor.readVoltage();
-   // Read the concentration value in %
-  float O2Val = O2Sensor.readConcentration();
   // Print of the results
   USB.print(F(" Temperature: "));
   USB.print(temperature);
@@ -229,107 +174,55 @@ void loop()
   USB.print(pressure);
   USB.println(F(" Pa"));
 
-  USB.print(F(" CO Sensor Voltage: "));
-  USB.print(coVol);
-  USB.println(F(" mV |"));
-
   USB.print(F(" VOC Sensor Voltage: "));
   USB.print(vocVol);
-  USB.println(F(" V |"));
-
-  USB.print(F(" NO2 Sensor Voltage: "));
-  USB.print(NO2Vol);
   USB.println(F(" V |"));
 
   USB.print(F("LPG Sensor Voltage: "));
   USB.print(LPGVol);
   USB.print(F(" V |"));
 
-  USB.print(F(" CO Sensor Resistance: "));
-  USB.print(coRes);
-  USB.println(F(" Ohms |"));
-
   USB.print(F(" VOC Sensor Resistance: "));
   USB.print(vocRes);
-  USB.println(F(" Ohms |"));
-
-  USB.print(F(" NO2 Sensor Resistance: "));
-  USB.print(NO2Res);
   USB.println(F(" Ohms |"));
 
   USB.print(F(" LPG Sensor Resistance: "));
   USB.print(LPGRes);
   USB.print(F(" Ohms |"));
 
-  USB.print(F(" CO concentration Estimated: "));
-  USB.print(coPPM);
-  USB.println(F(" ppm"));
-
   USB.print(F(" VOC concentration Estimated: "));
   USB.print(vocPPM);
   USB.println(F(" ppm"));
-
-  USB.print(F(" NO2 concentration Estimated: "));
-  USB.print(NO2PPM);
-  USB.println(F(" ppm"));
-
-  USB.print(F("O2 concentration Estimated: "));
-  USB.print(O2Vol);
-  USB.print(F(" mV | "));
-
-  USB.print(F(" O2 concentration Estimated: "));
-  USB.print(O2Val);
-  USB.println(F(" %"));  
 
   USB.print(F(" LPG concentration Estimated: "));
   USB.print(LPGPPM);
   USB.println(F(" ppm"));
 
-  USB.println();
-
+    USB.println();
+    
   ///////////////////////////////////////////
   // 3. Create BINARY frame
-  ///////////////////////////////////////////
-  //frame.createFrame(ASCII, node_ID);
+  /////////////////////////////////////////// 
   frame.createFrame(BINARY); 
   
-frame.setID(node_ID);
+  frame.setID(node_ID);
 
   frame.addSensor(SENSOR_GASES_TC, Gases.getTemperature());
-
   frame.addSensor(SENSOR_GASES_HUM, Gases.getHumidity());
-
   frame.addSensor(SENSOR_GASES_PRES, Gases.getPressure());
-
-  frame.addSensor(SENSOR_GASES_NO2, NO2Sensor.readConcentration(NO2Res));
-
-  frame.addSensor(SENSOR_GASES_CO, COSensor.readConcentration(coRes));
-
+  // Create new frame (ASCII)
+  // Add LPG PPM value
   frame.addSensor(SENSOR_GASES_VOC, VOCSensor.readConcentration(vocRes));
+  frame.addSensor(SENSOR_GASES_LPG, LPGPPM);
+  // Show the frame
+  frame.showFrame();
 
-  frame.addSensor(SENSOR_GASES_O2, O2Val);  
-
-  frame.addSensor(SENSOR_BAT, PWR.getBatteryLevel());
-
- frame.addSensor(SENSOR_GASES_LPG, LPGPPM);
-
-    ///////////////////////////////
-    // 3.1. Create a new Frame 
-    ///////////////////////////////
-    // print frame
-  frame.showFrame();  
-    ///////////////////////////////
-    // 3.2. Send Frame to Meshlium
-    ///////////////////////////////
-
-    // http frame
-  error = WIFI_PRO.sendFrameToMeshlium( type, host, port, frame.buffer, frame.length);
+    error = WIFI_PRO.sendFrameToMeshlium( type, host, port, frame.buffer, frame.length);
 
     // check response
     if (error == 0)
     {
       USB.println(F("HTTP OK"));     
-       
       USB.print(F("HTTP Time from OFF state (ms):"));    
       USB.println(millis()-previous);
     }
@@ -345,11 +238,12 @@ frame.setID(node_ID);
     USB.print(F(" Time(ms):"));    
     USB.println(millis()-previous);  
   }
+  
 
-  //////////////////////////////////////////////////
-  // 3. Switch OFF
-  //////////////////////////////////////////////////  
-  WIFI_PRO.OFF(socket);
+
+WIFI_PRO.OFF(socket);
   USB.println(F("WiFi switched OFF\n\n")); 
   delay(20000);
+
+
 }
