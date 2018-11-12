@@ -29,3 +29,4 @@ if __name__ == '__main__':
     main()
     
 
+https://docs.google.com/document/d/1gRULc941WTCQbKlWta18DEUEwXh2GvtEyghlT1R-Gzc/edit
